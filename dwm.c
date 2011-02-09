@@ -106,11 +106,13 @@ struct Client {
 typedef struct {
 	int x, y, w, h;
 	unsigned long norm[ColLast];
+	unsigned long dim[ColLast];
 	unsigned long sel[ColLast];
 	Drawable drawable;
 	GC gc;
 
 	XftColor  xftnorm[ColLast];
+	XftColor  xftdim[ColLast];
 	XftColor  xftsel[ColLast];
 	XftDraw  *xftdrawable;
 
@@ -170,7 +172,6 @@ static void die(const char *errstr, ...);
 static Monitor *dirtomon(int dir);
 static void drawbar(Monitor *m);
 static void drawbars(void);
-static void drawsquare(Bool filled, Bool empty, Bool invert, unsigned long col[ColLast]);
 static void drawtext(const char *text, unsigned long col[ColLast], Bool invert);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
@@ -721,10 +722,8 @@ drawbar(Monitor *m) {
 	dc.x = 0;
 	for(i = 0; i < LENGTH(tags); i++) {
 		dc.w = TEXTW(tags[i]);
-		col = m->tagset[m->seltags] & 1 << i ? dc.sel : dc.norm;
+		col = m->tagset[m->seltags] & 1 << i ? dc.sel : ((occ & 1 << i) ? dc.norm : dc.dim);
 		drawtext(tags[i], col, urg & 1 << i);
-		drawsquare(m == selmon && (selmon->sel && selmon->sel != panel) && selmon->sel->tags & 1 << i,
-		           occ & 1 << i, urg & 1 << i, col);
 		dc.x += dc.w;
 	}
 	dc.w = blw = TEXTW(m->ltsymbol);
@@ -747,7 +746,6 @@ drawbar(Monitor *m) {
 		if(m->sel) {
 			col = m == selmon ? dc.sel : dc.norm;
 			drawtext(m->sel->name, col, False);
-			drawsquare(m->sel->isfixed, m->sel->isfloating, False, col);
 		}
 		else
 			drawtext(NULL, dc.norm, False);
@@ -762,27 +760,6 @@ drawbars(void) {
 
 	for(m = mons; m; m = m->next)
 		drawbar(m);
-}
-
-void
-drawsquare(Bool filled, Bool empty, Bool invert, unsigned long col[ColLast]) {
-	int x;
-	XGCValues gcv;
-	XRectangle r = { dc.x, dc.y, dc.w, dc.h };
-
-	gcv.foreground = col[invert ? ColBG : ColFG];
-	XChangeGC(dpy, dc.gc, GCForeground, &gcv);
-	x = (dc.font.ascent + dc.font.descent + 2) / 4;
-	r.x = dc.x + 1;
-	r.y = dc.y + 1;
-	if(filled) {
-		r.width = r.height = x + 1;
-		XFillRectangles(dpy, dc.drawable, dc.gc, &r, 1);
-	}
-	else if(empty) {
-		r.width = r.height = x;
-		XDrawRectangles(dpy, dc.drawable, dc.gc, &r, 1);
-	}
 }
 
 void
@@ -807,7 +784,7 @@ drawtext(const char *text, unsigned long col[ColLast], Bool invert) {
 	if(len < olen)
 		for(i = len; i && i > len - 3; buf[--i] = '.');
 	pango_layout_set_text(dc.plo, text, len);
-	pango_xft_render_layout(dc.xftdrawable, (col==dc.norm?dc.xftnorm:dc.xftsel)+(invert?ColBG:ColFG), dc.plo, x * PANGO_SCALE, y * PANGO_SCALE);
+	pango_xft_render_layout(dc.xftdrawable, (col==dc.norm?dc.xftnorm:(col==dc.dim?dc.xftdim:dc.xftsel))+(invert?ColBG:ColFG), dc.plo, x * PANGO_SCALE, y * PANGO_SCALE);
 }
 
 void
@@ -1551,6 +1528,9 @@ setup(void) {
         dc.norm[ColBorder] = getcolor(normbordercolor, dc.xftnorm+ColBorder);
         dc.norm[ColBG] = getcolor(normbgcolor, dc.xftnorm+ColBG);
         dc.norm[ColFG] = getcolor(normfgcolor, dc.xftnorm+ColFG);
+        dc.dim[ColBorder] = getcolor(normbordercolor, dc.xftnorm+ColBorder);
+        dc.dim[ColBG] = getcolor(normbgcolor, dc.xftnorm+ColBG);
+        dc.dim[ColFG] = getcolor(dimfgcolor, dc.xftdim+ColFG);
         dc.sel[ColBorder] = getcolor(selbordercolor, dc.xftsel+ColBorder);
         dc.sel[ColBG] = getcolor(selbgcolor, dc.xftsel+ColBG);
         dc.sel[ColFG] = getcolor(selfgcolor, dc.xftsel+ColFG);
