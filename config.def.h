@@ -1,25 +1,35 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const char font[]            = "Sans 8"
-static const char normbordercolor[] = "#cccccc";
-static const char normbgcolor[]     = "#cccccc";
-static const char normfgcolor[]     = "#000000";
-static const char selbordercolor[]  = "#0066ff";
-static const char selbgcolor[]      = "#0066ff";
-static const char selfgcolor[]      = "#ffffff";
+static const char font[]            = "DejaVu Sans Mono 9";
+static const char xftfont[]         = "DejaVu Sans Mono-9";
+static const char normbordercolor[] = "#3f3f3f";
+static const char normbgcolor[]     = "#3f3f3f";
+static const char normfgcolor[]     = "#dcdccc";
+static const char dimfgcolor[]      = "#6f6f6f";
+static const char selbordercolor[]  = "#6F6F6F";
+static const char selbgcolor[]      = "#1e2320";
+static const char selfgcolor[]      = "#f0dfaf";
+static const char urgbordercolor[]  = "#3f3f3f";
+static const char urgbgcolor[]      = "#3f3f3f";
+static const char urgfgcolor[]      = "#cc9393";
 static const unsigned int borderpx  = 1;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const Bool showbar           = True;     /* False means no bar */
 static const Bool topbar            = True;     /* False means bottom bar */
 
 /* tagging */
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static const char *tags[] = { "main", "web", "im", "4", "5", "6", "7", "8", "9" };
 
 static const Rule rules[] = {
-	/* class      instance    title       tags mask     isfloating   monitor */
-	{ "Gimp",     NULL,       NULL,       0,            True,        -1 },
-	{ "Firefox",  NULL,       NULL,       1 << 8,       False,       -1 },
+	/* class            instance    title       tags mask     isfloating   monitor */
+	{ "stalonetray",    NULL,       NULL,       ~0,           True,        -1 },
+//	{ "Gimp",           NULL,       NULL,       0,            True,        -1 },
+	{ "Firefox",        NULL,       NULL,       1 << 1,       False,       -1 },
+	{ "Minefield",      NULL,       NULL,       1 << 1,       False,       -1 },
+	{ "Empathy",        NULL,       NULL,       1 << 2,       False,       -1 },
+	{ "Pidgin",         NULL,       NULL,       1 << 2,       False,       -1 },
+	{ "Quodlibet",      NULL,       NULL,       1 << 7,       False,       -1 },
 };
 
 /* layout(s) */
@@ -34,7 +44,7 @@ static const Layout layouts[] = {
 };
 
 /* key definitions */
-#define MODKEY Mod1Mask
+#define MODKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
 	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
@@ -45,13 +55,19 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *dmenucmd[] = { "dmenu_run", "-fn", font, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, NULL };
-static const char *termcmd[]  = { "uxterm", NULL };
+static const char *dmenucmd[] = { "dmenu_run", "-fn", xftfont, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, NULL };
+static const char *termcmd[]  = { "roxterm", NULL };
+static const char *filemancmd[] = { "nautilus", "--browser", NULL };
+static const char *lockcmd[] = { "slock", NULL };
+static const char *shotcmd[] = { "scrot", NULL };
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
+	{ MODKEY,                       XK_semicolon, spawn,       {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
+	{ MODKEY|ShiftMask,             XK_n,      spawn,          {.v = filemancmd } },
+	{ MODKEY,                       XK_x,      spawn,          {.v = lockcmd } },
+	{ NULL,                         XK_Print,  spawn,          {.v = shotcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
